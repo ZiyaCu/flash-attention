@@ -210,9 +210,9 @@ jobs:
         run: |
           python setup.py sdist --dist-dir=dist
 
-      - name: Deploy
-        env:
-          TWINE_USERNAME: "__token__"
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          python -m twine upload dist/*
+      # - name: Deploy
+      #   env:
+      #     TWINE_USERNAME: "__token__"
+      #     TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      #   run: |
+      #     python -m twine upload dist/*
