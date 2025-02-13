@@ -10,10 +10,7 @@ name: Build wheels and deploy
 on:
   create:
     tags:
-      - v*
-  push:
-    branches:
-      - main
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
   workflow_dispatch:
 
 jobs:
@@ -214,9 +211,9 @@ jobs:
   #       run: |
   #         python setup.py sdist --dist-dir=dist
 
-      # - name: Deploy
-      #   env:
-      #     TWINE_USERNAME: "__token__"
-      #     TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-      #   run: |
-      #     python -m twine upload dist/*
+  #     - name: Deploy
+  #       env:
+  #         TWINE_USERNAME: "__token__"
+  #         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+  #       run: |
+  #         python -m twine upload dist/*
