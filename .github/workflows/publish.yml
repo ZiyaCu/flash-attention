@@ -7,35 +7,30 @@
  
 name: Build wheels and deploy
 
+
 on:
-  create:
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag of llama-cpp-python to build: v2.7.4.post17'
+        default: 'v2.7.4.post1'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version tag of llama-cpp-python to build: v2.7.4.post1'
+        default: 'v2.7.4.post1'
+        required: true
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
 
-  setup_release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get the tag version
-        id: extract_branch
-        run: echo ::set-output name=branch::${GITHUB_REF#refs/tags/}
-        shell: bash
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.extract_branch.outputs.branch }}
-          release_name: ${{ steps.extract_branch.outputs.branch }}
-
   build_wheels:
     name: Build Wheel
-    needs: setup_release
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -64,10 +59,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: 'Dao-AILab/flash-attention'
+          ref: ${{ inputs.version }}
+          submodules: 'recursive'
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -161,59 +160,20 @@ jobs:
         run: |
           ls dist
 
-      - name: Get the tag version
-        id: extract_branch
-        run: echo ::set-output name=branch::${GITHUB_REF#refs/tags/}
-
-      - name: Get Release with tag
-        id: get_current_release
-        uses: joutvhu/get-release@v1
+      - name: Upload files to a GitHub release
+        id: upload-release
+        uses: svenstaro/upload-release-action@2.7.0
+        continue-on-error: true
         with:
-          tag_name: ${{ steps.extract_branch.outputs.branch }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release Asset
-        id: upload_release_asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./dist/*.whl
+          tag: flash-attn
+          file_glob: true
+          make_latest: false
+          overwrite: true
+        
+      - uses: actions/upload-artifact@v4
+        if: steps.upload-release.outcome == 'failure'
         with:
-          upload_url: ${{ steps.get_current_release.outputs.upload_url }}
-          asset_path: ./dist/${{env.wheel_name}}
-          asset_name: ${{env.wheel_name}}
-          asset_content_type: application/*
-
-  # publish_package:
-  #   name: Publish package
-  #   needs: [build_wheels]
-
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: '3.10'
-
-  #     - name: Install dependencies
-  #       run: |
-  #         pip install ninja packaging wheel twine
-  #         # Install latest setuptools with support for pypi metadata 2.2 (improved compat w/ uv)
-  #         pip install setuptools==75.8.0
-  #         # We don't want to download anything CUDA-related here
-  #         pip install torch --index-url https://download.pytorch.org/whl/cpu
-
-  #     - name: Build core package
-  #       env:
-  #         FLASH_ATTENTION_SKIP_CUDA_BUILD: "TRUE"
-  #       run: |
-  #         python setup.py sdist --dist-dir=dist
-
-  #     - name: Deploy
-  #       env:
-  #         TWINE_USERNAME: "__token__"
-  #         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-  #       run: |
-  #         python -m twine upload dist/*
+          name: flash-attn-wheels
+          path: ./dist/*.whl
