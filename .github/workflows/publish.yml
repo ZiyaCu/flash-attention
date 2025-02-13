@@ -110,7 +110,7 @@ jobs:
           pip install -U wheel
           pip install packaging
           # For some reason torch 2.2.0 on python 3.12 errors saying no setuptools
-          pip install setuptools<70.0.0 # ==75.8.0
+          pip install setuptools==69.5.1 # ==75.8.0
           # With python 3.13 and torch 2.5.1, unless we update typing-extensions, we get error
           # AttributeError: attribute '__default__' of 'typing.ParamSpec' objects is not writable
           pip install typing-extensions==4.12.2
