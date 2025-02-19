@@ -147,12 +147,12 @@ jobs:
           # https://github.com/pytorch/pytorch/blob/664058fa83f1d8eede5d66418abff6e20bd76ca8/torch/utils/cpp_extension.py#L810
           # However this still fails so I'm using a newer version of setuptools
           pip install setuptools==75.8.0
-          # pip install ninja packaging wheel
+          pip install ninja packaging wheel
           export PATH=/usr/local/nvidia/bin:/usr/local/nvidia/lib64:$PATH
           export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
           # Limit MAX_JOBS otherwise the github runner goes OOM
           # nvcc 11.8 can compile with 2 jobs, but nvcc 12.3 goes OOM
-          MAX_JOBS=1 FLASH_ATTENTION_FORCE_BUILD="TRUE" FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11_abi}} python setup.py bdist_wheel --dist-dir=dist
+          MAX_JOBS=4 FLASH_ATTENTION_FORCE_BUILD="TRUE" FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11_abi}} python setup.py bdist_wheel --dist-dir=dist
           tmpname=cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}cxx11abi${{ matrix.cxx11_abi }}
           wheel_name=$(ls dist/*whl | xargs -n 1 basename | sed "s/-/+$tmpname-/2")
           ls dist/*whl |xargs -I {} mv {} dist/${wheel_name}
