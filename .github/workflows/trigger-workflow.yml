@@ -1,0 +1,44 @@
+name: Check for new release
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Get my latest release
+        id: get_my_release
+        run: |
+          # Fetch release information and extract the release tag
+          my_release_tag=$(curl -s https://api.github.com/repos/ZiyaCu/flash-attention/releases/latest | jq -r '.tag_name')
+          echo "MY_LATEST_TAG=$my_release_tag" >> $GITHUB_ENV
+
+      - name: Get latest Git tag from another repository
+        run: |
+          REPO_URL="https://github.com/Dao-AILab/flash-attention.git" # Replace with the target repository URL
+          latest_tag=$(git ls-remote --tags "$REPO_URL" | awk '{print $2}' | sed -E 's/refs\/tags\/(.*)/\1/' | sort -V | tail -n 1)
+          echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
+
+      - name: Compare with previous release
+        id: compare_release
+        run: |
+          # Compare the fetched release tag with the previous release tag
+          if [ "${{ env.LATEST_TAG }}" != "${{ env.MY_LATEST_TAG }}" ]; then
+            echo "release_changed=true" >> $GITHUB_OUTPUT
+            echo "Release changed: true"
+          else
+            echo "release_changed=false" >> $GITHUB_OUTPUT
+            echo "Release changed: false"
+          fi
+
+      - name: Call workflow to build code
+        if: steps.compare_release.outputs.release_changed == 'true'
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: build-wheels-auto.yml
+          inputs: '{ "version": "${{ env.LATEST_TAG }}" }'
