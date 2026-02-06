@@ -13,15 +13,15 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version tag of flash-attention to build: v2.7.4.post1'
-        default: 'v2.7.4.post1'
+        description: 'Version tag of flash-attention to build: v2.8.3'
+        default: 'v2.8.3'
         required: true
         type: string
   workflow_call:
     inputs:
       version:
-        description: 'Version tag of flash-attention to build: v2.7.4.post1'
-        default: 'v2.7.4.post1'
+        description: 'Version tag of flash-attention to build: v2.8.3'
+        default: 'v2.8.3'
         required: true
         type: string
 
@@ -151,6 +151,8 @@ jobs:
           #pip install ninja packaging wheel
           export PATH=/usr/local/nvidia/bin:/usr/local/nvidia/lib64:$PATH
           export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+          LOCAL_VERSION="+cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}"
+          sed -i "s/version=\"[^\"]*\"/version=\"${{ inputs.version }}${LOCAL_VERSION}\"/" setup.py
           # Limit MAX_JOBS otherwise the github runner goes OOM
           # nvcc 11.8 can compile with 2 jobs, but nvcc 12.3 goes OOM
           MAX_JOBS=1 FLASH_ATTENTION_FORCE_BUILD="TRUE" FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11_abi}} python setup.py bdist_wheel --dist-dir=dist
