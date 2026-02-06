@@ -151,6 +151,7 @@ jobs:
           #pip install ninja packaging wheel
           export PATH=/usr/local/nvidia/bin:/usr/local/nvidia/lib64:$PATH
           export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+          export TORCH_CUDA_ARCH_LIST="8.9;9.0"
           export FLASH_ATTN_CUDA_ARCHS="8.9;9.0"
           export FLASH_ATTN_LOCAL_VERSION="cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}"
           
