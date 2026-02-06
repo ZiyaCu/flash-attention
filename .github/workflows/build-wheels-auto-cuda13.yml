@@ -151,12 +151,12 @@ jobs:
           #pip install ninja packaging wheel
           export PATH=/usr/local/nvidia/bin:/usr/local/nvidia/lib64:$PATH
           export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
-          export TORCH_CUDA_ARCH_LIST="8.9;9.0"
-          LOCAL_VERSION="+cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}"
-          sed -i "s/version=\"[^\"]*\"/version=\"${{ inputs.version }}${LOCAL_VERSION}\"/" setup.py
+          export FLASH_ATTN_CUDA_ARCHS="8.9;9.0"
+          export FLASH_ATTN_LOCAL_VERSION="cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}"
+          
           # Limit MAX_JOBS otherwise the github runner goes OOM
           # nvcc 11.8 can compile with 2 jobs, but nvcc 12.3 goes OOM
-          MAX_JOBS=1 FLASH_ATTENTION_FORCE_BUILD="TRUE" FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11_abi}} python setup.py bdist_wheel --dist-dir=dist
+          MAX_JOBS=2 FLASH_ATTENTION_FORCE_BUILD="TRUE" FLASH_ATTENTION_FORCE_CXX11_ABI=${{ matrix.cxx11_abi}} python setup.py bdist_wheel --dist-dir=dist
           # tmpname=cu${WHEEL_CUDA_VERSION}torch${MATRIX_TORCH_VERSION}cxx11abi${{ matrix.cxx11_abi }}
           # wheel_name=$(ls dist/*whl | xargs -n 1 basename | sed "s/-/+$tmpname-/2")
           # ls dist/*whl |xargs -I {} mv {} dist/${wheel_name}
